@@ -12,8 +12,9 @@ class RasterSegmentation(BaseSegmentation):
         self.xda = rioxarray.open_rasterio(dtm_path)
         self.dtm = self.xda.data[0]
 
-    def _heights_of_neighbor_pixels(self,*pixel):
+    def _heights_of_neighbor_pixels(self,pixel):
         i,j = pixel
+        m,n = self.dtm.shape
         return self.dtm[(max(i-1,0),max(j-1,0))],self.dtm[(max(i-1,0),j)],self.dtm[(max(i-1,0),min(j+1,n-1))],self.dtm[(i,max(j-1,0))],self.dtm[(i,min(j+1,n-1))],self.dtm[(min(i+1,m-1),max(j-1,0))],self.dtm[(min(i+1,m-1),max(j-1,0))],self.dtm[(min(i+1,m-1),min(j+1,n-1))]
 
     def _classify_pixel(self,*pixel):
@@ -22,10 +23,10 @@ class RasterSegmentation(BaseSegmentation):
     
     def segment(self):
         m,n = self.dtm.shape
-        segmented = np.zeros(m,n)
+        segmented = np.zeros((m,n))
         for i in range(m):
             for j in range(n):
-                segmented[i,j] = self.classify(i,j)
+                segmented[i,j] = self._classify_pixel(i,j)
         x = self.xda.x.values
         y = self.xda.y.values
         x, y = np.meshgrid(x, y)
