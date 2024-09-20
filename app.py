@@ -3,14 +3,12 @@ from segmentation.static_segmentation import StaticSegmentation
 import streamlit as st
 import pydeck as pdk
 
-if __name__=='__main__':
+def get_map_layers():
     # dtm_path = './data/n12_e077_1arc_v3.tif'
     file_path = './output/low_lying_pts.csv'
     seg = StaticSegmentation(file_path=file_path)
     df = seg.segment()
-    # st.map(df,latitude='y',longitude='x',size=5)
-
-    ALL_LAYERS = {
+    return  {
         "Low Lying Areas":
             pdk.Layer(
                 "ScatterplotLayer",
@@ -20,10 +18,13 @@ if __name__=='__main__':
                 get_radius=5,
             ),
     }
+
+if __name__=='__main__':
+    layers = get_map_layers()
     st.sidebar.markdown("### Map Layers")
     selected_layers = [
         layer
-        for layer_name, layer in ALL_LAYERS.items()
+        for layer_name, layer in layers.items()
         if st.sidebar.checkbox(layer_name, True)
     ]
     if selected_layers:
@@ -31,8 +32,8 @@ if __name__=='__main__':
             pdk.Deck(
                 map_style=None,
                 initial_view_state=pdk.ViewState(
-                    latitude=12.96,
-                    longitude=77.73,
+                    latitude=12.97,
+                    longitude=77.74,
                     zoom=17,
                     pitch=50,
                 ),
