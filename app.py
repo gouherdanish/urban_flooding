@@ -6,40 +6,32 @@ from shapely.geometry import mapping
 from segmentation.raster_segmentation import RasterSegmentation
 from segmentation.static_segmentation import StaticSegmentation
 
-def get_initial_view_state():
+def get_initial_view_state(village_poly):
+    centroid_lon,centroid_lat = village_poly.centroid.x,village_poly.centroid.y
     return pdk.ViewState(
-        latitude=12.969,
-        longitude=77.739661,
+        latitude=centroid_lat,
+        longitude=centroid_lon,
         zoom=15,
         pitch=50,
     )
 
-def get_map_layers(low_points_df,village_polygons_df):
-    options = village_polygons_df['KGISVill_2'].values
-    selected_village = st.selectbox(
-        label='Which village in Bengaluru do you live in ?',
-        options=options,
-        index=None,
-        placeholder="Select your village..."
-    )
-    selected_village_df = village_polygons_df.loc[village_polygons_df['KGISVill_2']==selected_village,['geometry']]
-    low_points_in_village_df = gpd.sjoin(low_points_df,selected_village_df,predicate='within',how='inner')
-    village_boundary = [list(coord) for coord in low_points_in_village_df.geometry.values[0].exterior.coords]  
+def get_map_layers(low_points_in_village_df,selected_village_poly): 
+    village_boundary = [list(coord) for coord in selected_village_poly.exterior.coords] 
     village_polygon_layer = pdk.Layer(
         "PolygonLayer",
         data=[village_boundary],
         get_polygon='-',
         stroked=False,
         filled=True,
-        get_fill_color=[122, 255, 100, 20],
+        get_fill_color="[255, 0, 100, 160]",
         pickable=True
     )
     low_points_layer = pdk.Layer(
         "ScatterplotLayer",
-        data=low_points_df.drop('geometry',axis=1),
+        data=low_points_in_village_df.drop('geometry',axis=1),
         get_position="[x, y]",
         get_color="[200, 30, 0, 160]",
-        get_radius=5,
+        get_radius=10,
         pickable=True
     )
     return  {
@@ -56,11 +48,11 @@ def select_layers(layers):
     ]
     return selected_layers
 
-def create_map(selected_layers):
+def create_map(selected_layers,village_poly):
     st.pydeck_chart(
         pdk.Deck(
             map_style=None,
-            initial_view_state=get_initial_view_state(),
+            initial_view_state=get_initial_view_state(village_poly),
             layers=[selected_layers],
         )
     )
@@ -74,10 +66,25 @@ if __name__=='__main__':
     
     seg = StaticSegmentation(file_path=low_points_file_path)
     low_points_df = seg.segment()
+
     village_polygons_df = gpd.read_file(bangalore_villages_file_path).to_crs('EPSG:4326')
-    layers = get_map_layers(low_points_df,village_polygons_df)
+    options = village_polygons_df['KGISVill_2'].values
+    selected_village = st.selectbox(
+        label='Which village in Bengaluru do you live in ?',
+        options=options,
+        placeholder="Select your village..."
+    )
+    print(selected_village)
+
+    selected_village_df = village_polygons_df.loc[village_polygons_df['KGISVill_2']==selected_village,['geometry']].reset_index(drop=True).iloc[-1:,:]
+    low_points_in_village_df = gpd.sjoin(low_points_df,selected_village_df,predicate='within',how='inner').drop('index_right',axis=1).reset_index(drop=True)
+    print(selected_village_df)
+    print(low_points_in_village_df)
+
+    village_poly = selected_village_df.values[0][0]
+    layers = get_map_layers(low_points_in_village_df,village_poly)
     selected_layers = select_layers(layers)
     if selected_layers:
-        create_map(selected_layers)
+        create_map(selected_layers,village_poly)
     else:
         st.error("Please choose at least one layer above.")
