@@ -6,11 +6,6 @@ from shapely.geometry import mapping
 from segmentation.raster_segmentation import RasterSegmentation
 from segmentation.static_segmentation import StaticSegmentation
 
-def get_village_boundary(village_polygons_df,selected_village):
-    village_poly = village_polygons_df.loc[village_polygons_df['KGISVill_2']==selected_village,'geometry'].values[0]
-    village_boundary = [list(coord) for coord in village_poly.exterior.coords]  
-    return [village_boundary]
-
 def get_initial_view_state():
     return pdk.ViewState(
         latitude=12.969,
@@ -25,11 +20,14 @@ def get_map_layers(low_points_df,village_polygons_df):
         label='Which village in Bengaluru do you live in ?',
         options=options,
         index=None,
-        placeholder="Select your village...")
-    village_boundary = get_village_boundary(village_polygons_df,selected_village)
+        placeholder="Select your village..."
+    )
+    selected_village_df = village_polygons_df.loc[village_polygons_df['KGISVill_2']==selected_village,['geometry']]
+    low_points_in_village_df = gpd.sjoin(low_points_df,selected_village_df,predicate='within',how='inner')
+    village_boundary = [list(coord) for coord in low_points_in_village_df.geometry.values[0].exterior.coords]  
     village_polygon_layer = pdk.Layer(
         "PolygonLayer",
-        data=village_boundary,
+        data=[village_boundary],
         get_polygon='-',
         stroked=False,
         filled=True,
