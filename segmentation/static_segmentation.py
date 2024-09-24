@@ -1,6 +1,6 @@
 from typing import Union
 from pathlib import Path
-import pandas as pd
+import geopandas as gpd
 
 from segmentation.base_segmentation import BaseSegmentation
 
@@ -9,4 +9,7 @@ class StaticSegmentation(BaseSegmentation):
         self.file_path = file_path
 
     def segment(self):
-        return pd.read_csv(self.file_path)
+        df = gpd.read_file(self.file_path)
+        df['x'] = df['geometry'].x
+        df['y'] = df['geometry'].y
+        return df
