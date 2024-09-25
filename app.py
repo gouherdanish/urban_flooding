@@ -7,6 +7,11 @@ from segmentation.raster_segmentation import RasterSegmentation
 from segmentation.static_segmentation import StaticSegmentation
 
 def get_initial_view_state(village_poly):
+    """
+    Creates initial view state for the map layer.
+    Directs streamlit to got to the centroid of the given village
+    Shows the map at zoom level 12 (default)
+    """
     centroid_lon,centroid_lat = village_poly.centroid.x,village_poly.centroid.y
     return pdk.ViewState(
         latitude=centroid_lat,
@@ -16,6 +21,11 @@ def get_initial_view_state(village_poly):
     )
 
 def get_map_layers(low_points_in_village_df,selected_village_poly): 
+    """
+    Creates village boundary in a format that is accepted by Pydeck
+    Creates polygon layer for showing Village Boundary on map
+    Creates point layer for showing Low lying points on map
+    """
     village_boundary = [list(coord) for coord in selected_village_poly.exterior.coords] 
     village_polygon_layer = pdk.Layer(
         "PolygonLayer",
@@ -40,6 +50,9 @@ def get_map_layers(low_points_in_village_df,selected_village_poly):
     }
 
 def select_layers(layers):
+    """
+    Creates a sidebar with radio buttons to enable selecting from `layers`
+    """
     st.sidebar.markdown("### Map Layers")
     selected_layers = [
         layer
@@ -49,6 +62,9 @@ def select_layers(layers):
     return selected_layers
 
 def create_map(selected_layers,village_poly):
+    """
+    Creates a Pydeck chart for the selected layers which is dispayed on Streamlit map
+    """
     st.pydeck_chart(
         pdk.Deck(
             map_style=None,
