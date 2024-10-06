@@ -8,12 +8,12 @@ if __name__=='__main__':
     app = App()
 
     # Image Segmentation
-    low_points_file_path = './appdata/low_lying_points/low_lying_pts.shp'
+    low_points_file_path = '../data/low_lying_points/low_lying_pts.shp'
     seg = StaticSegmentation(file_path=low_points_file_path)
     low_points_df = seg.segment()
 
     # Bangalore Villages
-    bangalore_villages_file_path = './appdata/20_Bengaluru_Urban/20_Bengaluru _Urban.shp'
+    bangalore_villages_file_path = '../data/20_Bengaluru_Urban/20_Bengaluru _Urban.shp'
     village_polygons_df = gpd.read_file(bangalore_villages_file_path).to_crs('EPSG:4326')
     
     # User-selected Village
