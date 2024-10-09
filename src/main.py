@@ -1,4 +1,5 @@
 import geopandas as gpd
+import os
 
 from segmentation.raster_segmentation import RasterSegmentation
 from segmentation.static_segmentation import StaticSegmentation
