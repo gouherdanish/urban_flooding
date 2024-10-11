@@ -37,3 +37,7 @@ if __name__=='__main__':
         app.create_map(selected_layers,village_poly)
     else:
         app.error("Please choose at least one layer above.")
+
+    # Search History
+    app.persist(village=selected_village)
+    app.search_history()
