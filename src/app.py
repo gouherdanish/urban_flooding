@@ -1,5 +1,9 @@
 import streamlit as st
 import pydeck as pdk
+from pymongo import MongoClient
+import pandas as pd
+
+from constants import Constants
 
 class App:
     """
@@ -23,6 +27,9 @@ class App:
 
     Step 4: Create Streamlit Map for Selected Village and underlying low lying points
     """
+    def __init__(self) -> None:
+        self.db_client = MongoClient(**st.secrets['mongo'])
+        self.collection = self.db_client[Constants.DATABASE_NAME][Constants.COLLECTION_NAME]
 
     def get_initial_view_state(self,village_poly):
         """
@@ -101,5 +108,22 @@ class App:
             )
         )
     
-    def error(err):
+    def error(self,err):
         return st.error(err)
+    
+    def fetch(self):
+        return pd.DataFrame(self.collection.find()).drop('_id',axis=1)
+    
+    def persist(self,village):
+        self.collection.update_one(
+            { "village": village },
+            { "$inc": { "count": 1 } },
+            upsert = True
+        )
+    
+    def search_history(self):
+        """
+        Creates a sidebar with radio buttons to enable selecting from `layers`
+        """
+        st.sidebar.markdown("### Search History")
+        st.sidebar.write(self.fetch())
