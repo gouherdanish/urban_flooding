@@ -29,7 +29,9 @@ class App:
     """
     def __init__(self) -> None:
         self.db_client = MongoClient(**st.secrets['mongo'])
-        self.collection = self.db_client[Constants.DATABASE_NAME][Constants.COLLECTION_NAME]
+        self.user_requests_collection = self.db_client[Constants.DATABASE_NAME][Constants.USER_REQUESTS_COLLECTION_NAME]
+        self.last_searched_collection = self.db_client[Constants.DATABASE_NAME][Constants.LAST_SEARCHED_COLLECTION_NAME]
+
 
     def get_initial_view_state(self,village_poly):
         """
@@ -45,13 +47,14 @@ class App:
             pitch=50,
         )
     
-    def select_from(self,options):
+    def select_from(self,options,index):
         """
         Provides a dropdown for user to select/enter his village name
         """
         return st.selectbox(
             label='Which village in Bengaluru do you live in ?',
             options=options,
+            index=index,
             placeholder="Select your village..."
         )
 
@@ -112,13 +115,18 @@ class App:
         return st.error(err)
     
     def fetch(self):
-        return pd.DataFrame(self.collection.find()).drop('_id',axis=1)
+        df = pd.DataFrame(self.user_requests_collection.find()).drop('_id',axis=1)
+        return df if len(df) != 0 else "None"
     
     def persist(self,village):
-        self.collection.update_one(
+        self.user_requests_collection.update_one(
             { "village": village },
-            { "$inc": { "count": 1 } },
+            { "$inc": { "count": 1 }, "$set": { "last": True }},
             upsert = True
+        )
+        self.user_requests_collection.update_many(
+            { "village": {"$ne": village }},
+            { "$set": { "last": False } }
         )
     
     def search_history(self):
@@ -127,3 +135,7 @@ class App:
         """
         st.sidebar.markdown("### Search History")
         st.sidebar.write(self.fetch())
+
+    def last_searched_village(self):
+        last_searched_village = self.user_requests_collection.find_one({"last":True})
+        return last_searched_village if last_searched_village else {"village": None}
