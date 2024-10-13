@@ -19,7 +19,9 @@ if __name__=='__main__':
     
     # User-selected Village
     options = village_polygons_df['KGISVill_2'].values
-    selected_village = app.select_from(options)
+    last_searched_village = app.last_searched_village().get('village',None)
+    last_searched_village_index = 0 if last_searched_village is None else int(village_polygons_df.loc[village_polygons_df['KGISVill_2']==last_searched_village].index.values[0])
+    selected_village = app.select_from(options,index=last_searched_village_index)
     selected_village_df = village_polygons_df.loc[village_polygons_df['KGISVill_2']==selected_village,['geometry']].reset_index(drop=True).iloc[-1:,:]
     
     # Filtering Low lying points inside selected village
