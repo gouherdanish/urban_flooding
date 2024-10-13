@@ -1,3 +1,4 @@
 class Constants:
     DATABASE_NAME = 'urban_flooding'
-    COLLECTION_NAME = 'user_requests'
+    USER_REQUESTS_COLLECTION_NAME = 'user_requests'
+    LAST_SEARCHED_COLLECTION_NAME = 'last_searched'
