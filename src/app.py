@@ -112,13 +112,25 @@ class App:
         )
     
     def error(self,err):
+        """
+        Returns error
+        """
         return st.error(err)
     
     def fetch(self):
+        """
+        Queries the MongoDB collection and dumps all the documents in a dataframe
+        Hides dataframe index
+        """
         df = pd.DataFrame(self.user_requests_collection.find()).drop('_id',axis=1)
-        return df if len(df) != 0 else "None"
+        return df.style.hide_index().to_html() if len(df) != 0 else "None"
     
     def persist(self,village):
+        """
+        Performs two tasks
+        - Upserts the current village into the collection by incrementing its search counter by 1 and setting its last searched flag to True
+        - Updates the last searched flag to False for all other villages in the collection 
+        """
         self.user_requests_collection.update_one(
             { "village": village },
             { "$inc": { "count": 1 }, "$set": { "last": True }},
@@ -131,11 +143,14 @@ class App:
     
     def search_history(self):
         """
-        Creates a sidebar with radio buttons to enable selecting from `layers`
+        Creates the search history as a dataframe table in the sidebar
         """
         st.sidebar.markdown("### Search History")
-        st.sidebar.write(self.fetch())
+        st.sidebar.write(self.fetch(),unsafe_allow_html=True)
 
     def last_searched_village(self):
+        """
+        Queries MongoDB collection to find the village whose last searched flag is True
+        """
         last_searched_village = self.user_requests_collection.find_one({"last":True})
         return last_searched_village if last_searched_village else {"village": None}
