@@ -28,10 +28,8 @@ class App:
     Step 4: Create Streamlit Map for Selected Village and underlying low lying points
     """
     def __init__(self) -> None:
-        self.db_client = MongoClient(**st.secrets['mongo'])
+        self.db_client = MongoClient(**st.secrets['mongo']) 
         self.user_requests_collection = self.db_client[Constants.DATABASE_NAME][Constants.USER_REQUESTS_COLLECTION_NAME]
-        self.last_searched_collection = self.db_client[Constants.DATABASE_NAME][Constants.LAST_SEARCHED_COLLECTION_NAME]
-
 
     def get_initial_view_state(self,village_poly):
         """
@@ -123,7 +121,7 @@ class App:
         Hides dataframe index
         """
         df = pd.DataFrame(self.user_requests_collection.find()).drop('_id',axis=1)
-        return df.style.hide_index().to_html() if len(df) != 0 else "None"
+        return df.style.hide(axis='index').to_html() if len(df) != 0 else "None"
     
     def persist(self,village):
         """
